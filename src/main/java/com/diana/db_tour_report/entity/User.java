@@ -1,0 +1,78 @@
+package com.diana.db_tour_report.entity;
+
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "users")
+public class User {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(name = "name", length = 100, unique = true)
+    private String name;
+
+    @Column(name = "password", length = 255)
+    private String password;
+
+    @Column(name = "role", length = 50)
+    private String role;
+
+    @Column(name = "region", columnDefinition = "TEXT")
+    private String region;  // Comma-separated: "Western, Central, Southern"
+
+    @Column(name = "area", columnDefinition = "TEXT")
+    private String area;    // Comma-separated: "Colombo North, Colombo South, Kandy"
+
+    public User() {
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
+
+    public String getRegion() {
+        return region;
+    }
+
+    public void setRegion(String region) {
+        this.region = region;
+    }
+
+    public String getArea() {
+        return area;
+    }
+
+    public void setArea(String area) {
+        this.area = area;
+    }
+}

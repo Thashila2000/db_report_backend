@@ -30,7 +30,14 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        configuration.setAllowedOrigins(Arrays.asList("http://localhost:5173"));
+        // Allow local dev + Vercel frontend
+        configuration.setAllowedOrigins(Arrays.asList(
+                "http://localhost:5173",
+                "https://your-frontend-app.vercel.app"
+        ));
+        // or for testing on multiple devices:
+        // configuration.setAllowedOriginPatterns(Arrays.asList("*"));
+
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);

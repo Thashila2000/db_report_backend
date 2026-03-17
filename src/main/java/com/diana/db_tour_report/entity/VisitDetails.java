@@ -35,23 +35,32 @@ public class VisitDetails {
     @Column(name = "accompanied_by", length = 200)
     private String accompaniedBy;
 
+    /**
+     * ✅ New Field for Base64 Image
+     * @Lob indicates a Large Object.
+     * columnDefinition = "LONGTEXT" is used to ensure MySQL supports
+     * large strings (up to 4GB), as standard TEXT is limited to 64KB.
+     */
+    @Lob
+    @Column(name = "accompanied_by_image", columnDefinition = "LONGTEXT")
+    private String accompaniedByImage;
+
     @Column(name = "visit_type", length = 200)
     private String visitType;
 
     @Column(name = "visit_time")
-    @JsonFormat(pattern = "yyyy.MM.dd HH.mm") // ✅ Formats for React display
+    @JsonFormat(pattern = "yyyy.MM.dd HH.mm")
     private LocalDateTime visitTime;
 
     @Column(name = "user_name", length = 100)
     private String userName;
 
-    @Column(name = "report_group_id", length = 150, unique = true) // ✅ Ensures no duplicate reports
+    @Column(name = "report_group_id", length = 150, unique = true)
     private String reportGroupId;
 
     public VisitDetails() {
     }
 
-    // ✅ Automatic timestamp generation if not provided
     @PrePersist
     protected void onCreate() {
         if (this.visitTime == null) {
@@ -59,7 +68,8 @@ public class VisitDetails {
         }
     }
 
-    // --- Standard Getters & Setters ---
+    // --- Getters & Setters ---
+
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -83,6 +93,9 @@ public class VisitDetails {
 
     public String getAccompaniedBy() { return accompaniedBy; }
     public void setAccompaniedBy(String accompaniedBy) { this.accompaniedBy = accompaniedBy; }
+
+    public String getAccompaniedByImage() { return accompaniedByImage; }
+    public void setAccompaniedByImage(String accompaniedByImage) { this.accompaniedByImage = accompaniedByImage; }
 
     public String getVisitType() { return visitType; }
     public void setVisitType(String visitType) { this.visitType = visitType; }

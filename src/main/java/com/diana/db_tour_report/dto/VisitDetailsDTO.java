@@ -13,6 +13,10 @@ public class VisitDetailsDTO {
     private String territoryName;
     private String visitedBy;
     private String accompaniedBy;
+
+    // ✅ Added to capture the Base64 image string from React
+    private String accompaniedByImage;
+
     private String visitType;
 
     // Ensures the JSON from React/Vite matches your reporting format
@@ -20,7 +24,6 @@ public class VisitDetailsDTO {
     private LocalDateTime visitTime;
 
     private String userName;
-
 
     @NotBlank(message = "Report Group ID is required")
     private String reportGroupId;
@@ -50,6 +53,9 @@ public class VisitDetailsDTO {
 
     public String getAccompaniedBy() { return accompaniedBy; }
     public void setAccompaniedBy(String accompaniedBy) { this.accompaniedBy = accompaniedBy; }
+
+    public String getAccompaniedByImage() { return accompaniedByImage; }
+    public void setAccompaniedByImage(String accompaniedByImage) { this.accompaniedByImage = accompaniedByImage; }
 
     public String getVisitType() { return visitType; }
     public void setVisitType(String visitType) { this.visitType = visitType; }

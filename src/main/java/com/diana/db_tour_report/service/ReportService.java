@@ -28,6 +28,38 @@ public class ReportService {
     @Autowired private OutletRepository outletRepo;
 
     /**
+     * Used for the Full Preview Modal
+     * ✅ UPDATED: Cleaned up lookup logic for Visit Details to ensure the
+     * accompaniedByImage and other new fields are included in the preview.
+     */
+    public Map<String, Object> getConsolidatedFullReport(String reportGroupId) {
+        Map<String, Object> data = new HashMap<>();
+        try {
+            // Using findByReportGroupId (returns Optional) instead of findAll
+            // This ensures we get the specific header record with the image data.
+            Optional<VisitDetails> visitDetails = visitRepo.findByReportGroupId(reportGroupId);
+            data.put("visitDetails", visitDetails.orElse(null));
+
+            data.put("dbProfile", profileRepo.findByReportGroupId(reportGroupId));
+            data.put("salesPerformance", salesRepo.findAllByReportGroupId(reportGroupId));
+            data.put("stockItems", stockRepo.findAllByReportGroupId(reportGroupId));
+            data.put("issues", issueRepo.findAllByReportGroupId(reportGroupId));
+            data.put("actions", actionRepo.findAllByReportGroupId(reportGroupId));
+            data.put("actionStaff", staffRepo.findAllByReportGroupId(reportGroupId));
+            data.put("followUps", followUpRepo.findAllByReportGroupId(reportGroupId));
+
+            // Ensure remarks are handled gracefully
+            Object remarksObj = remarksRepo.findByReportGroupId(reportGroupId);
+            data.put("remarks", remarksObj != null ? remarksObj : Collections.emptyMap());
+
+            return data;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw e;
+        }
+    }
+
+    /**
      * User Page Filter (By UserName)
      */
     public List<ReportSummaryDTO> getFilteredReports(String userName, String dateStr, String type) {
@@ -54,7 +86,6 @@ public class ReportService {
 
     /**
      * Admin Dashboard Filter (By Region)
-     * FIXED: Uses ContainingIgnoreCase to match "Western" with "Western Region"
      */
     public List<ReportSummaryDTO> getReportsByRegionAndType(String region, String dateStr, String type) {
         List<ReportSummaryDTO> resultList = new ArrayList<>();
@@ -62,7 +93,6 @@ public class ReportService {
         if ("DAILY_TASK".equalsIgnoreCase(type)) {
             List<ReportAction> tasks;
             if (dateStr != null && !dateStr.trim().isEmpty()) {
-                // First try standard hyphen format, then legacy dot format
                 tasks = reportRepo.findByRegionContainingIgnoreCaseAndCreatedAtStartingWith(region, dateStr);
                 if (tasks.isEmpty()) {
                     tasks = reportRepo.findByRegionContainingIgnoreCaseAndCreatedAtStartingWith(region, dateStr.replace("-", "."));
@@ -73,38 +103,11 @@ public class ReportService {
             resultList = tasks.stream().map(this::mapTaskToDTO).collect(Collectors.toList());
         }
         else if ("FIELD_VISIT".equalsIgnoreCase(type)) {
-            // Updated to use the fuzzy matching for outlets as well
             List<MegaOutlet> allOutlets = outletRepo.findByRegionContainingIgnoreCase(region);
             resultList = processFieldVisitList(allOutlets, dateStr);
         }
 
         return sortDescending(resultList);
-    }
-
-    /**
-     * Used for the Full Preview Modal
-     */
-    public Map<String, Object> getConsolidatedFullReport(String reportGroupId) {
-        Map<String, Object> data = new HashMap<>();
-        try {
-            List<VisitDetails> visitDetailsList = visitRepo.findAllByReportGroupId(reportGroupId);
-            data.put("visitDetails", visitDetailsList.isEmpty() ? null : visitDetailsList.get(0));
-            data.put("dbProfile", profileRepo.findByReportGroupId(reportGroupId));
-            data.put("salesPerformance", salesRepo.findAllByReportGroupId(reportGroupId));
-            data.put("stockItems", stockRepo.findAllByReportGroupId(reportGroupId));
-            data.put("issues", issueRepo.findAllByReportGroupId(reportGroupId));
-            data.put("actions", actionRepo.findAllByReportGroupId(reportGroupId));
-            data.put("actionStaff", staffRepo.findAllByReportGroupId(reportGroupId));
-            data.put("followUps", followUpRepo.findAllByReportGroupId(reportGroupId));
-
-            Object remarksObj = remarksRepo.findByReportGroupId(reportGroupId);
-            data.put("remarks", remarksObj != null ? remarksObj : Collections.emptyMap());
-
-            return data;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw e;
-        }
     }
 
     /**
@@ -124,7 +127,6 @@ public class ReportService {
     private List<ReportSummaryDTO> processFieldVisitList(List<MegaOutlet> outlets, String dateStr) {
         Map<String, MegaOutlet> uniqueVisits = new HashMap<>();
         for (MegaOutlet outlet : outlets) {
-            // Handle both dot and hyphen date formats for the filter
             String outletDate = outlet.getCreatedAt() != null ? outlet.getCreatedAt().toString().split("T")[0].replace(".", "-") : "";
             if (dateStr == null || dateStr.trim().isEmpty() || outletDate.startsWith(dateStr)) {
                 uniqueVisits.putIfAbsent(outlet.getReportGroupId(), outlet);
@@ -183,7 +185,6 @@ public class ReportService {
         entity.setArea(dto.getArea());
 
         if (dto.getVisitTime() != null) {
-            // Matches your DB's 2026.03.10 format
             entity.setCreatedAt(dto.getVisitTime().replace("-", "."));
         }
         reportRepo.save(entity);

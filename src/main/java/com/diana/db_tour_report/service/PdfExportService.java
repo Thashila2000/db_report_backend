@@ -54,7 +54,9 @@ public class PdfExportService {
             // Date Formatter
             DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy.MM.dd HH:mm");
 
-            // --- 1. VISIT DETAILS (HEADER) ---
+
+
+          // --- 1. VISIT DETAILS (HEADER) ---
             var visit = visitRepo.findByReportGroupId(reportGroupId).orElse(null);
             if (visit != null) {
                 // Main Report Title
@@ -67,6 +69,7 @@ public class PdfExportService {
                 // --- SECTION TOPIC ---
                 document.add(new Paragraph("1. Visit Details")
                         .setBold().setFontSize(topicSize).setUnderline());
+
                 // Force table to 100% width
                 Table headerTable = new Table(UnitValue.createPercentArray(new float[]{55, 45})).useAllAvailableWidth();
 
@@ -99,9 +102,33 @@ public class PdfExportService {
                 headerTable.addCell(createNoBorderCell("", normalSize));
 
                 document.add(headerTable);
+
+                // SECTION FOR ACCOMPANIED BY IMAGE
+                if (visit.getAccompaniedByImage() != null && !visit.getAccompaniedByImage().isEmpty()) {
+                    try {
+                        // Remove the Base64 header if present (e.g., "data:image/jpeg;base64,")
+                        String base64Data = visit.getAccompaniedByImage().contains(",")
+                                ? visit.getAccompaniedByImage().split(",")[1]
+                                : visit.getAccompaniedByImage();
+
+                        byte[] imageBytes = Base64.getDecoder().decode(base64Data);
+                        Image img = new Image(ImageDataFactory.create(imageBytes));
+
+                        // Auto-scale to fit page width while maintaining aspect ratio
+                        img.setMaxWidth(180);
+                        img.setMarginTop(10);
+                        img.setBorder(new com.itextpdf.layout.borders.SolidBorder(ColorConstants.LIGHT_GRAY, 1));
+
+                        document.add(new Paragraph("Proof of Visit:").setFontSize(10).setItalic().setMarginTop(5));
+                        document.add(img);
+                    } catch (Exception e) {
+                        document.add(new Paragraph("[Image Error: Could not render visit photo]")
+                                .setFontSize(8).setFontColor(ColorConstants.RED));
+                    }
+                }
+
                 document.add(new Paragraph("\n"));
             }
-
             // --- 2. DB PROFILE & INFRASTRUCTURE ---
             profileRepo.findByReportGroupId(reportGroupId).ifPresent(profile -> {
                 // 2.1 BASIC PROFILE

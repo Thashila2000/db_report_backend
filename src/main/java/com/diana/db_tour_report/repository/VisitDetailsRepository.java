@@ -12,19 +12,34 @@ import java.util.Optional;
 public interface VisitDetailsRepository extends JpaRepository<VisitDetails, Long> {
 
     /**
-     * Find the specific visit header to link with all 8 tables
+     * Find the specific visit header to link with other report tables.
+     * reportGroupId is unique, so we return an Optional.
      */
     Optional<VisitDetails> findByReportGroupId(String reportGroupId);
 
     /**
-     * Get all visits for a user, sorted by time (Newest First)
+     * Get all visits for a specific user.
+     */
+    List<VisitDetails> findByUserName(String userName);
+
+    /**
+     * Get all visits for a user, sorted by time (Newest First).
      */
     List<VisitDetails> findByUserNameOrderByVisitTimeDesc(String userName);
 
     /**
-     * Used for generating monthly or weekly summary reports
+     * Used for generating monthly or weekly summary reports with sorting.
      */
     List<VisitDetails> findByUserNameAndVisitTimeBetweenOrderByVisitTimeDesc(
+            String userName,
+            LocalDateTime startDate,
+            LocalDateTime endDate
+    );
+
+    /**
+     * Standard date range filter (used by the Service's findByUserNameAndDateRange).
+     */
+    List<VisitDetails> findByUserNameAndVisitTimeBetween(
             String userName,
             LocalDateTime startDate,
             LocalDateTime endDate
@@ -35,12 +50,8 @@ public interface VisitDetailsRepository extends JpaRepository<VisitDetails, Long
     List<VisitDetails> findByArea(String area);
     List<VisitDetails> findByDbNameContainingIgnoreCase(String dbName);
 
-    // Check if a report already exists to prevent duplicate submissions
+    /**
+     * Prevents duplicate report submissions by checking the unique Group ID.
+     */
     boolean existsByReportGroupId(String reportGroupId);
-
-    List<VisitDetails> findByUserNameAndVisitTimeBetween(String userName, LocalDateTime startDate, LocalDateTime endDate);
-
-    List<VisitDetails> findByUserName(String userName);
-
-    List<VisitDetails> findAllByReportGroupId(String reportGroupId);
 }

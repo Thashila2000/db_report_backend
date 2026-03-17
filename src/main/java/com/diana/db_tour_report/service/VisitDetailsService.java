@@ -25,16 +25,9 @@ public class VisitDetailsService {
      */
     public VisitDetails saveVisitDetails(VisitDetailsDTO dto) {
         VisitDetails entity = new VisitDetails();
-        entity.setRegion(dto.getRegion());
-        entity.setArea(dto.getArea());
-        entity.setDbName(dto.getDbName());
-        entity.setDbCode(dto.getDbCode());
-        entity.setTerritoryName(dto.getTerritoryName());
-        entity.setVisitedBy(dto.getVisitedBy());
-        entity.setAccompaniedBy(dto.getAccompaniedBy());
-        entity.setVisitType(dto.getVisitType());
-        entity.setUserName(dto.getUserName());
-        entity.setReportGroupId(dto.getReportGroupId());
+
+        // Map DTO to Entity
+        mapDtoToEntity(dto, entity);
 
         // Preserve DTO time if provided, else use current server time
         entity.setVisitTime(dto.getVisitTime() != null ? dto.getVisitTime() : LocalDateTime.now());
@@ -50,9 +43,6 @@ public class VisitDetailsService {
         return repository.findByUserName(userName);
     }
 
-    /**
-     * ✅ FIXED: Added missing 'return' statement
-     */
     public List<VisitDetails> findByUserNameAndDateRange(
             String userName,
             LocalDateTime startDate,
@@ -61,9 +51,6 @@ public class VisitDetailsService {
         return repository.findByUserNameAndVisitTimeBetween(userName, startDate, endDate);
     }
 
-    /**
-     * ✅ COMPLETED: Returns history sorted by time (Newest First)
-     */
     public List<VisitDetails> findByUserNameSorted(String userName) {
         return repository.findByUserNameOrderByVisitTimeDesc(userName);
     }
@@ -80,6 +67,25 @@ public class VisitDetailsService {
         VisitDetails entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Visit Details not found with id: " + id));
 
+        // Update fields
+        mapDtoToEntity(dto, entity);
+
+        // Optionally update visit time if provided in update DTO
+        if (dto.getVisitTime() != null) {
+            entity.setVisitTime(dto.getVisitTime());
+        }
+
+        return repository.save(entity);
+    }
+
+    public void deleteById(Long id) {
+        repository.deleteById(id);
+    }
+
+    /**
+     * ✅ Helper method to avoid code duplication between save and update
+     */
+    private void mapDtoToEntity(VisitDetailsDTO dto, VisitDetails entity) {
         entity.setRegion(dto.getRegion());
         entity.setArea(dto.getArea());
         entity.setDbName(dto.getDbName());
@@ -87,14 +93,12 @@ public class VisitDetailsService {
         entity.setTerritoryName(dto.getTerritoryName());
         entity.setVisitedBy(dto.getVisitedBy());
         entity.setAccompaniedBy(dto.getAccompaniedBy());
+
+        // ✅ Mapping the new Base64 Image field
+        entity.setAccompaniedByImage(dto.getAccompaniedByImage());
+
         entity.setVisitType(dto.getVisitType());
         entity.setUserName(dto.getUserName());
         entity.setReportGroupId(dto.getReportGroupId());
-
-        return repository.save(entity);
-    }
-
-    public void deleteById(Long id) {
-        repository.deleteById(id);
     }
 }
